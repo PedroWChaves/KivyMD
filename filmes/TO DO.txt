@@ -38,6 +38,5 @@ BACK END
 
 
 GITHUB
-	ler o guia
-	upar o projeto
+	aprender como as coisas funfam
 	definir para fazer backup automatico
