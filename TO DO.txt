@@ -1,0 +1,102 @@
+API key pedeo = k_t23pjq0u
+API key cup = k_yhwr0i17
+
+movies_data.db = [pedro_minha_lista]
+cup_movies_data.db = [cup_minha_lista]
+
+
+CURTO PRAZO - antes de buildar
+	GITHUB
+		ler o guia
+		definir para fazer backup automatico
+
+
+MEDIO PRAZO  - depois de buildar
+	LISTA
+		melhorar editar filme -> adicionar confirmação ou opção de desfazer
+		melhorar remover filme
+			mudar a forma como identifica qual filme está sendo editado (impossivel alterar o titulo atualmente)
+
+	DATABASE
+		acabar de integrar o arquivo .db
+			procurar oq falta fazer
+
+	IMDB API
+		melhorar a forma como os requests sao feitos
+		melhorar a forma como os erros sao detectados
+		usar a API pra pegar as informações nao completadas dos filmes (meus e da cup)
+
+	CONFIGURAÇÕES
+		opções adicionar e editar filme:
+			- procurar automaticamente no IMDB e 
+				+ mostrar opções / usar primeiro resultado
+				+ substiuir informações / completar as nao informadas
+					quais informações substituir
+			- não procurar no IMBD -> não recomendado
+				(mantem apenas os dados informados, sem imagem)
+
+		adicionar filmes a partir de um arquivo
+		alterar o numero de filmes que aparecem ao abrir o app
+		autoscroll para o filme sorteado ao iniciar o app
+
+	SORTEADOR
+		implementar sorteio com prioridades
+
+
+lONGO PRAZO - depois de acabar as anteriores
+	se necessario criar uma classe Filme ou Movie
+	criar novas funções para integrar tds bibliotecas
+	opção de gerar arquivo .txt ou .json
+
+	BACKUP
+
+	MENU ITEM
+		procurar no imdb
+
+	SPEED DIAL
+		mudar prioridade de varios
+		procurar varios no imdb
+
+	DATABASE
+		passar as infos do arquivo .json para uma nova tabela no arquivo .db
+			- em forma de string (json.dumps e json.loads)
+				vantagem que nao precisa alterar os codigos que usam essa info
+
+			- ou nova tabela CONFIGS
+			profile        | account-circle
+		    color          | Red
+		    color_hue      | 600
+		    accent         | Yellow
+		    accent_hue     | 500
+		    theme          | Dark
+		    time_format    | %d/%m - %Hh%M
+		    current_order  | ORDER BY title ASC, year DESC
+		    selected       | 2003 - Matrix Revolutions
+
+		fechar a conexao automaticamente depois de um intervalo n sem uso
+
+	LISTA
+		limitar numero de filmes que aparecem ao abrir o app
+		sub-itens para continuações
+		adicionar opção de desfazer ou confimar ao remover filme da lista
+		trocar callbacks:
+			clicar no icone de filme -> abre detalhes
+			clicar no item -> se no modo de seleção, seleciona o item
+
+
+    VARIAS LISTAS
+    	lista de listas
+    	lista de assistidos
+    	menu com novas opções
+    		carregar na aba principal
+    		compartilhar
+    		excluir
+
+    	nova lista
+
+	FIREBASE
+		criar database para armazenar dados "publicos"
+			listas compartilhadas
+			alguma coisa que me der na telha
+
+	MODO ADM (?)
