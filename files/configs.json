@@ -1,5 +1,10 @@
 {
-    "profile": "account-circle",
+    "profile": {
+        "nickname": "So Pedrinho",
+        "accountname": "pedeo",
+        "api_key": "api_01082019",
+        "profile_icon": "emoticon-cool-outline"
+    },
     "color": "Red",
     "color_hue": "600",
     "accent": "Yellow",
@@ -7,5 +12,5 @@
     "theme": "Dark",
     "time_format": "%d/%m - %Hh%M",
     "current_order": "ORDER BY title ASC, year DESC",
-    "selected": "1988 - O T\u00famulo dos Vagalumes"
+    "selected": "2019 - Alita: Anjo de Combate"
 }

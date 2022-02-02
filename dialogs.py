@@ -37,6 +37,12 @@ class BaseContent(BoxLayout):
 
         return values
 
+# editar infos perfil
+class EditProfileContent(BaseContent):
+    nickname = StringProperty()
+    accountname = StringProperty()
+    api_key = StringProperty()
+    profile_icon = StringProperty()
 
 # adicionar e editar filme
 class AddMovieContent(BaseContent):
@@ -132,7 +138,7 @@ class LancamentoContent(BaseContent):
 
 # FUNÇÕES
 # adicionar filme
-def file_error_dialog(app, title, message):
+def message_dialog(app, title, message):
     dialog = BaseDialog(
         title=title,
         text=message,
@@ -146,8 +152,26 @@ def confirmation_dialog(app, text, confirm_action, *args):
         text = text,
         type = "alert",
         buttons=[
-            CancelButton(on_release=app.close_dialog),
+            CancelButton(),
             OkayButton(on_release=lambda x: confirm_action(*args)),
+        ]
+    )
+
+    return dialog
+
+def edit_profile_dialog(app, *args):
+    dialog = BaseDialog(
+        title = "Editar Perfil",
+        type = "custom",
+        content_cls = EditProfileContent(
+            nickname = app.data['profile']['nickname'],
+            accountname = app.data['profile']['accountname'],
+            api_key = app.data['profile']['api_key'],
+            profile_icon = app.data['profile']['profile_icon']
+            ),
+        buttons=[
+            CancelButton(),
+            OkayButton(on_release=app.edit_account)
         ]
     )
 
@@ -168,7 +192,7 @@ def add_movie_dialog(app):
 
 # editar filme
 def edit_movie_dialog(app, obj):
-    movie_info, _ = app.find_in_db_obj(obj)
+    movie_info, rowid = app.find_in_db_obj(obj)
 
     dialog = BaseDialog(
         title = "Editar Filme:",
@@ -182,7 +206,7 @@ def edit_movie_dialog(app, obj):
         ),
         buttons=[
             CancelButton(),
-            OkayButton(on_release=lambda x: app.edit_movie_item(obj)),
+            OkayButton(on_release=lambda x: app.edit_movie_item(obj, rowid)),
         ]
     )
 

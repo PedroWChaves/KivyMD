@@ -22,8 +22,10 @@ from kivy.utils import platform
 from kivy.properties import StringProperty, ListProperty, OptionProperty, NumericProperty
 from kivy.core.window import Window
 from kivy.uix.floatlayout import FloatLayout
+from kivy.network.urlrequest import UrlRequest
 
 import random as r
+import os
 
 from dialogs import *
 from json_file import *
@@ -180,6 +182,9 @@ class MovieList(MDList):
 
     def select_random(self, app, *args):
         selected = r.choice(self.children)
+        while selected.isempty():
+            selected = r.choice(self.children)
+
         selected.select(app)
         return selected
 
@@ -253,10 +258,6 @@ class MovieListItem(TwoLineAvatarIconListItem):
 class MovieListItemLeftIcon(IconLeftWidgetWithoutTouch):
     pass
 
-# IMAGEM DA ESQUERDA
-class MovieListItemLeftImage(ImageLeftWidget):
-    source = StringProperty("files/movie.png")
-
 # ICONE DA DIRETA
 class MovieListItemRightIcon(IRightBodyTouch, MDIconButton):
     def right_icon_callback(self, app):
@@ -275,8 +276,11 @@ class MovieListItemRightIcon(IRightBodyTouch, MDIconButton):
             app.selected_items.append(self.parent.parent)
 
         elif self.icon == "checkbox-marked":
-            self.text_color = app.theme_cls.opposite_bg_darkest
             self.icon = "checkbox-blank-outline"
+            if self.parent.parent == app.selected:
+                self.text_color = "black"
+            else:
+                self.text_color = app.theme_cls.opposite_bg_darkest
 
             app.selected_items.remove(self.parent.parent)
 
@@ -316,7 +320,8 @@ class CineFile(MDApp):
 
     # INICIALIZAÇÃO, FINALIZAÇÃO E REINICIALIZAÇÃO (adicionar)
     def build(self):
-        self.path = "files/" #self.user_data_dir + "/"
+        # self.path = self.user_data_dir + "/"
+        self.path = "files/"
         self.data, self.load_error = load_json(self.path, self.JSON)
 
         self.theme_cls.primary_palette = self.data['color']
@@ -334,7 +339,15 @@ class CineFile(MDApp):
 
 
     def on_start(self):
-        self.moviesdb = SQLdb(self.path + self.DB, self.DBTABLE)
+        self.moviesdb = SQLdb(self.path + self.DB)#, self.DBTABLE)
+        self.moviesdb.create_table(self.DBTABLE, """(
+            title text,
+            imdbId text,
+            year integer,
+            genres text,
+            priority integer
+        )""")
+        
         self.load_movies(self.moviesdb.get_table())
         self.load_selected()
 
@@ -348,8 +361,7 @@ class CineFile(MDApp):
         # preload(*args) -> coisas que demoram pra carregar
 
         if self.load_error:
-            print(self.load_error)
-            self.open_dialog(file_error_dialog,
+            self.open_dialog(message_dialog,
                 "Erro no Arquivo JSON",
                 f'Não foi possível carregar o arquivo "{self.JSON}", um novo será gerado\n\n{self.load_error}'
                 )
@@ -389,20 +401,18 @@ class CineFile(MDApp):
 
         # ADD MOVIE TO LIST
         lista = self.root.ids.lista_filmes
-        if lista.children[0].isempty():
-            lista.add_item_info(self.moviesdb.get_table_len()[0][0], movie_info)
-        else:
-            lista.add_item_widget()
-            lista.add_item_info(self.moviesdb.get_table_len()[0][0], movie_info)
+        if not lista.children[0].isempty():
+            lista.add_item_widget()    
+        lista.add_item_info(self.moviesdb.get_table_len()[0][0], movie_info)
 
         # ADD MOVIE TO DB
         self.moviesdb.add_one_to_table(movie_info)
 
 
-    def edit_movie_item(self, obj):
+    def edit_movie_item(self, obj, rowid):
         movie_info = self.dialog.get_info(True)
 
-        if not get_info(movie_info, "title"):
+        if not get_info(movie_info, "title") or not rowid:
             return
 
         # GET INFO FROM IMDB
@@ -417,18 +427,24 @@ class CineFile(MDApp):
         lista.edit_item_info(list(reversed(lista.children)).index(obj), movie_info)
 
         # EDIT MOVIE IN DB
-        rowid = self.find_rowid_in_database(obj) # MELHORAR: não é possivel editar o titulo e o ano
-        if not rowid:
-            return
+        c1, c2, c3, c4, c5 = self.get_info(movie_info, "title", "imdbId", "year", "genres", "priority")
+        self.moviesdb.update_entry(rowid,
+            title=c1,
+            imdbId=c2,
+            year=c3,
+            genres=c4,
+            priority=c5
+        )
 
-        self.moviesdb.update_entry(rowid, movie_info)
-
-    def delete_movie_item(self, obj): # ADICIONAR OPÇÃO DE DESFAZER OU CONFIRMAR
+    def delete_movie_item(self, obj, close_dialog):
         # REMOVE MOVIE IN LIST
         self.root.ids.lista_filmes.remove_widget(obj)
 
         # REMOVE MOVIE IN DB
         self.moviesdb.delete_entry(self.find_rowid_in_database(obj))
+
+        if close_dialog:
+            self.close_dialog()
 
 
     def order_list(self, *args):
@@ -482,7 +498,7 @@ class CineFile(MDApp):
         self.menu = MDDropdownMenu(
             items = items,
             width_mult=3,
-            max_height=147,
+            max_height="147dp",
             border_margin="4dp",
             background_color=self.theme_cls.bg_light,
             radius=["2dp"]
@@ -490,9 +506,9 @@ class CineFile(MDApp):
 
     def open_menu(self, button):
         if button.parent.parent == self.selected:
-            self.menu.max_height = 196
+            self.menu.max_height = "196dp"
         else:
-            self.menu.max_height = 147
+            self.menu.max_height = "147dp"
 
         self.menu.caller = button
         self.menu.open()
@@ -508,7 +524,10 @@ class CineFile(MDApp):
             self.open_dialog(edit_movie_dialog, filme)
 
         elif item == "Remover":
-            self.delete_movie_item(filme)
+            self.open_dialog(confirmation_dialog,
+                "Você tem certeza que deseja excluir esse item?",
+                self.delete_movie_item, filme, True
+                )
 
         elif item == "Desmarcar":
             if self.selected == filme:
@@ -561,21 +580,27 @@ class CineFile(MDApp):
 
     def select_movies_delete(self):
         self.selection_mode(True)
-        self.open_snackbar(self.confirm_delete)
+
+        self.open_snackbar(lambda x: self.open_dialog(confirmation_dialog,
+            "Você tem certeza que deseja excluir os itens selecionados?",
+            self.confirm_delete
+            )
+        )
+
+    def confirm_delete(self, *args):
+        for item in self.selected_items:
+            self.delete_movie_item(item, False)
+
+        self.close_snackbar()
+        self.close_dialog()
 
     # def select_movies_edit(self, obj=None): # TROCAR PARA select_movies_change_prio()
     #     self.selection_mode(True)
     #     self.open_snackbar(self.confirm_edit)
 
-    def confirm_delete(self, obj):
-        for item in self.selected_items:
-            self.delete_movie_item(item)
-
-        self.close_snackbar(None)
-
     # def confirm_edit(self, obj): # TALVEZ REMOVER ESSA OPÇÃO DE EDITAR VARIOS
     #     if not self.selected_items:
-    #         self.close_snackbar(None)
+    #         self.close_snackbar()
     #         return
 
     #     titulos = [item.text[7:].replace(" ", "_") for item in self.selected_items]
@@ -594,7 +619,7 @@ class CineFile(MDApp):
         #edita filme em MovieListItem
         #edita filme em self.moviesdb
 
-        self.close_snackbar(None)
+        # self.close_snackbar()
 
 
     # SNACKBAR
@@ -622,7 +647,7 @@ class CineFile(MDApp):
         ]
         self.snackbar.open()
 
-    def close_snackbar(self, obj):
+    def close_snackbar(self, *args):
         self.selected_items = []
         self.snackbar.dismiss()
         self.selection_mode(False)
@@ -645,20 +670,6 @@ class CineFile(MDApp):
 
 
     # CONFIGURAÇÕES APP
-    def change_theme(self, obj):
-        if self.theme_cls.theme_style == "Light":
-            self.theme_cls.theme_style = "Dark"
-        else:
-            self.theme_cls.theme_style = "Light"
-
-        if self.selected:
-            self.selected.bg_color = self.theme_cls.accent_light
-            if self.theme_cls.theme_style == "Dark":
-                self.selected.text_color = self.theme_cls.opposite_text_color
-                self.selected.secondary_text_color = self.theme_cls.opposite_secondary_text_color
-                self.selected.ids.movie_icon.text_color = self.theme_cls.bg_darkest
-                self.selected.ids.icon_id.text_color = self.theme_cls.bg_darkest
-
     def selection_mode(self, on):
         self.on_selection = on
 
@@ -669,7 +680,11 @@ class CineFile(MDApp):
         else:
             for movie in self.root.ids.lista_filmes.children:
                 movie.change_icon("dots-vertical")
-                movie.rightIcon.text_color = self.theme_cls.opposite_bg_darkest # TALVEZ MUDAR O TIRAR
+                if not movie.isempty():
+                    movie.rightIcon.text_color = self.theme_cls.opposite_bg_darkest
+                if movie == self.selected:
+                    movie.rightIcon.text_color = "black"
+
 
     def load_selected(self):
         selected_name = self.data["selected"]
@@ -707,6 +722,58 @@ class CineFile(MDApp):
 
     def get_info(self, *args):
         return get_info(*args)
+
+
+    # CONFIGS
+    def check_internet(self, obj):
+        req = UrlRequest(url="https://www.google.com", timeout=5,
+            on_success=lambda x, y: self.internet_on(obj),
+            on_error=lambda x, y: self.internet_off(obj)
+            )
+
+    def internet_on(self, obj, *args):
+        obj.icon = "wifi-check"
+
+    def internet_off(self, obj, *args):
+        obj.icon = "wifi-off"
+
+    def edit_account(self, *args):
+        profile_info = self.dialog.get_info(True)
+
+        self.data['profile']['nickname'] = profile_info[0]
+        self.data['profile']['accountname'] = profile_info[1]
+        self.data['profile']['api_key'] = profile_info[2]
+        self.data['profile']['profile_icon'] = profile_info[3]
+
+        self.root.ids.nickname.text = profile_info[0]
+        self.root.ids.accountname.text = "@" + profile_info[1]
+        self.root.ids.profile_icon.icon = profile_info[3]
+
+    def change_theme(self, *args):
+        if self.theme_cls.theme_style == "Light":
+            self.theme_cls.theme_style = "Dark"
+        else:
+            self.theme_cls.theme_style = "Light"
+
+        if self.selected:
+            self.selected.bg_color = self.theme_cls.accent_light
+            if self.theme_cls.theme_style == "Dark":
+                self.selected.text_color = self.theme_cls.opposite_text_color
+                self.selected.secondary_text_color = self.theme_cls.opposite_secondary_text_color
+                self.selected.leftIcon.text_color = self.theme_cls.bg_darkest
+                self.selected.rightIcon.text_color = self.theme_cls.bg_darkest
+
+        self.data['theme'] = self.theme_cls.theme_style
+
+    def show_files_dir(self, *args):
+        self.open_dialog(message_dialog,
+                "Diretorio de Arquivos",
+                os.path.abspath(self.path) + "\n" +
+                os.path.abspath(self.user_data_dir)
+                )
+
+    def save_files(self, *args):
+        save_json(self.data, self.path, self.JSON)
 
 
 if __name__ == "__main__":

@@ -12,15 +12,20 @@ import os
 
 def default_data():
     return {
-        "profile": "account-circle",
+        "profile": {
+        "nickname": "Meu Perfil",
+        "acccountname": "user",
+        "api_key": "None",
+        "profile_icon": "account-circle"
+        },
         "color": "Red",
-        "color_hue": "600",
+        "color_hue": "700",
         "accent": "Yellow",
         "accent_hue": "500",
         "theme": "Dark",
         "time_format": "%d/%m - %Hh%M",
         "current_order": "ORDER BY title ASC, year DESC",
-        "selected": "2019 - The Sound of Metal",
+        "selected": "",
     }
 
 

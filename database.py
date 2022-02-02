@@ -41,25 +41,30 @@ class SQLdb():
 		self.con = sqlite3.connect(file)
 		self.cursor = self.con.cursor()
 
-		self.load_table(table)
+		if table:
+			self.load_table(table)
 
 
 	def _get_placeholder(self):
-		query = "SELECT * FROM sqlite_master WHERE type='table' and name = ?"
-		cols = self.cursor.execute(query, (self.name,)).fetchone()[4]
-		cols = cols.replace("\n", "?")[cols.index("("):-3] + ")"
+		query = f"SELECT COUNT(*) FROM pragma_table_info('{self.name}')"; 
+		num_cols = self.cursor.execute(query).fetchone()[0]
 
-		placeholder = ""
-		for char in cols:
-			if char in {"(", "?", ",", ")"}:
-				placeholder += char
+		placeholder = f"({','.join(['?' for x in range(num_cols)])})"
+
+		# query = "SELECT * FROM sqlite_master WHERE type='table' and name = ?"
+		# cols = self.cursor.execute(query, (self.name,)).fetchone()[4]
+		# cols = cols.replace("\n", "?")[cols.index("("):-3] + ")"
+
+		# placeholder = ""
+		# for char in cols:
+		# 	if char in {"(", "?", ",", ")"}:
+		# 		placeholder += char
 
 		return placeholder
 
 
 	# CRIA A TABELA DE DADOS DOS FILMES
 	def create_table(self, name, columns):
-		print(f"CREATE TABLE if not exists {name} {columns}\n\n")
 		self.cursor.execute(f"CREATE TABLE if not exists {name} {columns}")
 		self.con.commit()
 		self.name = name
@@ -86,6 +91,7 @@ class SQLdb():
 
 		return load_table(new_table)
 
+
 	# ADICIONA UM DADO A TABELA DE DADOS
 	def add_one_to_table(self, entry):
 		self.cursor.execute(f"INSERT INTO {self.name} VALUES {self.placeholder}", entry)
@@ -99,7 +105,9 @@ class SQLdb():
 
 
 	# ATUALIZA DADO
-	def update_entry(self, index, update):
+	def update_entry(self, index, **kwargs):
+		update = ",".join([f"{key} = '{value}'" for key, value in kwargs.items() if value])
+		# print(f"UPDATE {self.name} SET {update} WHERE rowid = {str(index)}")
 		self.cursor.execute(f"UPDATE {self.name} SET {update} WHERE rowid = {str(index)}")
 		self.con.commit()
 
@@ -183,9 +191,12 @@ class SQLdb():
 
 
 # COMANDOS:
+# mydb = SQLdb("C:/Users/pedro/Appdata/Roaming/cinefile/" + "movies_data.db", "pedro_minha_lista")
 
+# mydb._get_placeholder()
+# mydb.add_one_to_table(("Avengers: Endgame", "", 2019, "super-heroi,acao", 2))
+# print(mydb.get_table())
 
 # mydb.con.close() # FECHA A CONEXÃO (BEST PRACTICE)
 #self.con.rollback() # CANCELA A EXECUÇÃO DO COMANDO
 #self.con.commit() # CONFIRMA A EXECUÇÃO DO COMANDO
-

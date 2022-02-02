@@ -4,40 +4,53 @@ API key cup = k_yhwr0i17
 movies_data.db = [pedro_minha_lista]
 cup_movies_data.db = [cup_minha_lista]
 
+GITHUB
+	aprender mais sobre git e github
 
-CURTO PRAZO - antes de buildar
-	GITHUB
-		ler o guia
-		definir para fazer backup automatico
-
+BUILD 1 feita!!
 
 MEDIO PRAZO  - depois de buildar
-	LISTA
-		melhorar editar filme -> adicionar confirmação ou opção de desfazer
-		melhorar remover filme
-			mudar a forma como identifica qual filme está sendo editado (impossivel alterar o titulo atualmente)
-
-	DATABASE
-		acabar de integrar o arquivo .db
-			procurar oq falta fazer
+	----- upar no github
 
 	IMDB API
-		melhorar a forma como os requests sao feitos
-		melhorar a forma como os erros sao detectados
+		usar urlrequest do kivy
+			melhorar a forma como os requests sao feitos
+			melhorar a forma como os erros sao detectados
+			procurar imagem do filme
 		usar a API pra pegar as informações nao completadas dos filmes (meus e da cup)
+		
+	----- upar no github
+
+	BARRA DE PESQUISA
+
+	ITENS DO NAV DRAWER
 
 	CONFIGURAÇÕES
-		opções adicionar e editar filme:
-			- procurar automaticamente no IMDB e 
-				+ mostrar opções / usar primeiro resultado
-				+ substiuir informações / completar as nao informadas
-					quais informações substituir
-			- não procurar no IMBD -> não recomendado
-				(mantem apenas os dados informados, sem imagem)
+		Lista:
+			adicionar filmes a partir de um arquivo
+			alterar o numero de filmes que aparecem ao abrir o app
+			autoscroll para o filme sorteado ao iniciar o app on/off
 
-		adicionar filmes a partir de um arquivo
-		alterar o numero de filmes que aparecem ao abrir o app
-		autoscroll para o filme sorteado ao iniciar o app
+			opções adicionar e editar filme:
+				- procurar automaticamente no IMDB e 
+					+ mostrar opções / usar primeiro resultado
+					+ substiuir informações / completar as nao informadas
+						quais informações substituir
+				- não procurar no IMBD -> não recomendado
+					(mantem apenas os dados informados, sem imagem)
+
+		Arquivos:
+			mostrar diretorio dos arquivos .json, .db, .txt, etc
+				deletar arquivos
+			opção de buscar arquivos em user_data
+			consertar "Tabela nao encontrada"
+				buscar em /files, se nao achar:
+				buscar em user_data, se nao achar:
+				criar novo arquivo
+			salvar as infos em /files ou user_data
+				caso usar /files:
+					opção de upar arquivos em user_data para caso att o ap
+
 
 	SORTEADOR
 		implementar sorteio com prioridades
@@ -45,17 +58,19 @@ MEDIO PRAZO  - depois de buildar
 
 lONGO PRAZO - depois de acabar as anteriores
 	se necessario criar uma classe Filme ou Movie
-	criar novas funções para integrar tds bibliotecas
 	opção de gerar arquivo .txt ou .json
-
-	BACKUP
+	opção de fazer backup do arquivo .db (local e nuvem)
+	criar tela de login
+		tentar criar conta no imdb api automaticamente para pegar a chave
 
 	MENU ITEM
 		procurar no imdb
+		selecionar (como se fosse sorteado)
 
 	SPEED DIAL
 		mudar prioridade de varios
 		procurar varios no imdb
+		carregar mais filmes, caso tenha
 
 	DATABASE
 		passar as infos do arquivo .json para uma nova tabela no arquivo .db
@@ -73,30 +88,36 @@ lONGO PRAZO - depois de acabar as anteriores
 		    current_order  | ORDER BY title ASC, year DESC
 		    selected       | 2003 - Matrix Revolutions
 
-		fechar a conexao automaticamente depois de um intervalo n sem uso
+		fechar a conexao automaticamente depois de um intervalo n sem uso (clock.schedule_once)
 
 	LISTA
+		talvez desfazer remover filme
 		limitar numero de filmes que aparecem ao abrir o app
+		carregar mais itens -> botao no speed dial
 		sub-itens para continuações
-		adicionar opção de desfazer ou confimar ao remover filme da lista
-		trocar callbacks:
-			clicar no icone de filme -> abre detalhes
-			clicar no item -> se no modo de seleção, seleciona o item
+		usar imagem padrao caso nao consiga pegar da internet
+		clicar no item -> se no modo de seleção, seleciona o item
 
-
-    VARIAS LISTAS
-    	lista de listas
+    IMPLEMENTAR VARIAS LISTAS
+    	lista de listas (segunda aba)
     	lista de assistidos
     	menu com novas opções
     		carregar na aba principal
     		compartilhar
     		excluir
+    		renomear (?)
 
-    	nova lista
+    	botao nova lista (no lugar do speed dial)
 
 	FIREBASE
 		criar database para armazenar dados "publicos"
 			listas compartilhadas
+				permissoes distintas: ver/alterar
+
+			backups na nuvem
 			alguma coisa que me der na telha
+				atualizações
+
 
 	MODO ADM (?)
+		postar alguma coisa pra aparecer em tds apps?
