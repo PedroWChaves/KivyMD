@@ -2,7 +2,9 @@ from kivymd.app import MDApp
 from kivymd.uix.tab import MDTabsBase
 from kivymd.uix.card import MDCard
 from kivymd.uix.menu import MDDropdownMenu
+from kivymd.uix.swiper import MDSwiper, MDSwiperItem
 from kivymd.uix.button import MDIconButton, MDFloatingActionButtonSpeedDial
+from kivymd.uix.screen import MDScreen
 from kivymd.uix.snackbar import Snackbar
 from kivymd.uix.behaviors import FakeRectangularElevationBehavior
 from kivymd.uix.selectioncontrol import MDCheckbox
@@ -23,13 +25,16 @@ from kivy.properties import StringProperty, ListProperty, OptionProperty, Numeri
 from kivy.core.window import Window
 from kivy.uix.floatlayout import FloatLayout
 from kivy.network.urlrequest import UrlRequest
+from kivy.uix.screenmanager import ScreenManager, NoTransition, SlideTransition, CardTransition, SwapTransition, FadeTransition, WipeTransition, FallOutTransition, RiseInTransition
 
 import random as r
+import urllib
 import os
 
 from dialogs import *
 from json_file import *
 from database import *
+# from imdb_api import *
 
 
 # FUNÇÕES GLOBAIS
@@ -57,7 +62,104 @@ def get_info_from_texts(text, secondary_text):
     return year, title, genres
 
 
-# DEFINIÇÕES DE CLASSES 
+# DEFINIÇÕES DE CLASSES
+class LogInScreen(MDScreen):
+    pass
+
+class SignUpScreen(MDScreen):
+    pass
+
+class MovieSearchNotFound(MDCard):
+    pass
+
+class SearchMovieResultsScreen(MDScreen):
+    def on_leave(self, *args):
+        self.show_searching()
+        self.ids.container.clear_widgets()
+
+    def show_searching(self, *args):
+        self.ids.toolbar.title = "Buscando..."
+        self.ids.toolbar.right_action_items = [[""]]
+
+    def show_results(self, items):
+        self.items = items
+        self.ids.toolbar.title = "Resultados da Busca:"
+        self.ids.toolbar.right_action_items = [["check", CineFile.get_running_app().select_movie_info]]
+
+        self.ids.container.add_widget(MovieSwiper())
+
+        for item in items:
+            self.ids.container.children[0].add_widget(
+                MovieSwiperItem(
+                    image = item['image'],
+                    title = item['title'],
+                    description = item['description']
+                )
+            )
+
+    def show_not_found(self, *args):
+        self.ids.toolbar.title = "Não Encontrado"
+        self.ids.container.add_widget(MovieSearchNotFound())
+
+
+class MainScreen(MDScreen):
+    pass
+
+class MyScreenManager(ScreenManager):
+    screen_dict = {
+        "main": "MainScreen()",
+        "log_in": "LogInScreen()",
+        "sign_up": "SignUpScreen()",
+        "movie_results": "SearchMovieResultsScreen()"
+    }
+
+    def load_screen(self, profile_data, app):
+        if profile_data['accountname']:
+            self.add_widget(MainScreen())
+            app.screen = self.get_screen("main").ids
+            self.current = 'main'
+            return True
+
+        self.add_widget(LogInScreen())
+        self.current = 'log_in'
+        return False
+
+    def change_screen(self, screen, transition="SlideTransition()"):
+        if not self.has_screen(screen):
+            self.add_widget(eval(self.screen_dict[screen]))
+
+        self.transition = eval(transition)
+        self.current = screen
+
+        return self.current_screen
+
+    def get_login_info(self, app, email, password, *args):
+        # IMPLEMENTAR FIREBASE
+        login_text = email.text
+        login_password = password.text
+
+        if login_text in {app.data["profile"]["accountname"], app.data["profile"]["email"]}:
+            if login_password == app.data["profile"]["password"]:
+                self.change_screen("main", "SlideTransition(direction='left')")
+            else:
+                # shake effect
+                print("senha inválida")
+
+        else:
+            # shake effect
+            print("perfil não encontrado")
+
+    def get_signup_info(self, app, container, *args):
+        data = [child.text for child in container.children[2:-2]]
+        
+        # IMPLEMENTAR FIREBASE
+
+        if data[1] == data[2]:
+            self.change_screen("main", "SlideTransition(direction='left')")
+        else:
+            print("senhas nao coincidem")
+
+
 class Tab(FloatLayout, MDTabsBase):
     pass
 
@@ -67,7 +169,11 @@ class MDCardElev(MDCard, FakeRectangularElevationBehavior):
 class MenuItem(OneLineIconListItem):
     icon = StringProperty()
 
-class Check(BoxLayout):
+class RightCheck(BoxLayout):
+    text = StringProperty()
+    group = StringProperty()
+
+class LeftCheck(BoxLayout):
     text = StringProperty()
     group = StringProperty()
 
@@ -77,10 +183,11 @@ class SpeedDialButton(MDFloatingActionButtonSpeedDial):
 
     def buttons(self, *args):
         return {
-            "  Deletar  ": "delete",
-            "  Ordenar ": "format-list-numbered",
-            "  Sortear  ": "dice-3",
-            "Adicionar": "playlist-plus",
+            "      Deletar      ": "delete",
+            "Procurar IMDb": "movie-search",
+            "      Sortear      ": "dice-3",
+            "      Ordenar     ": "format-list-numbered",
+            "    Adicionar    ": "playlist-plus",
         }
 
     def set_close_time(self, option):
@@ -301,12 +408,22 @@ class CardMovieItem(TwoLineListItem):
         self.secondary_text = secondary_text
 
 
+class MovieSwiper(MDSwiper):
+    pass
+
+class MovieSwiperItem(MDSwiperItem):
+    title = StringProperty()
+    image = StringProperty()
+    description = StringProperty()
+
+
 # APLICATIVO EM SI
 class CineFile(MDApp):
     # CONSTANTES
     JSON = "configs.json"
     DB = "movies_data.db"
     DBTABLE = "pedro_minha_lista"
+    baselink = "imdb-api.com/pt-BR/API"
 
     # VARIAVEIS GLOBAIS
     dialog = None
@@ -317,6 +434,10 @@ class CineFile(MDApp):
     on_selection = False
     selected_items = []
 
+    def change_toolbar(self, obj): # TEMPORARY
+        toolbar = self.screen.toolbar
+        toolbar.left_action_items = [[""]]
+        toolbar.right_action_items = [[""]]
 
     # INICIALIZAÇÃO, FINALIZAÇÃO E REINICIALIZAÇÃO (adicionar)
     def build(self):
@@ -330,43 +451,51 @@ class CineFile(MDApp):
         self.theme_cls.accent_hue = self.data['accent_hue']
         self.theme_cls.theme_style = self.data['theme']
 
-        Window.bind(on_request_close=self.on_request_close)
+        self.api_key = self.data['profile']['api_key'] # MUDAR DE LUGAR
 
         if platform == "win":
             Window.size = (337.5, 600)
 
-        return Builder.load_file('design.kv')
+        Builder.load_file('base_widgets.kv')
+        Builder.load_file('dialogs.kv')
 
+        return Builder.load_file('main_app.kv')
 
     def on_start(self):
-        self.moviesdb = SQLdb(self.path + self.DB)#, self.DBTABLE)
-        self.moviesdb.create_table(self.DBTABLE, """(
-            title text,
-            imdbId text,
-            year integer,
-            genres text,
-            priority integer
-        )""")
-        
-        self.load_movies(self.moviesdb.get_table())
-        self.load_selected()
+        screen_mg = self.root.ids.screen_mg
+        if screen_mg.load_screen(self.data['profile'], self):
+            
+            self.moviesdb = SQLdb(self.path + self.DB)#, self.DBTABLE)
+            self.moviesdb.create_table(self.DBTABLE, """(
+                title text,
+                imdbId text,
+                year integer,
+                genres text,
+                priority integer
+            )""")
+            
+            self.load_movies(self.moviesdb.get_table())
+            self.load_selected()
 
-        self.load_menu(
-            Detalhes = "movie-search", 
-            Editar = "pencil", 
-            Remover = "delete",
-            Desmarcar = "checkbox-marked",
-            EasterEgg = "egg-easter"
-        )
-        # preload(*args) -> coisas que demoram pra carregar
+            self.load_menu(
+                Detalhes = "movie-open-settings", 
+                IMDb = "movie-search",
+                Editar = "pencil", 
+                Remover = "delete",
+                Desmarcar = "checkbox-marked",
+                EasterEgg = "egg-easter"
+            )
+            # preload(*args) -> coisas que demoram pra carregar
 
-        if self.load_error:
-            self.open_dialog(message_dialog,
-                "Erro no Arquivo JSON",
-                f'Não foi possível carregar o arquivo "{self.JSON}", um novo será gerado\n\n{self.load_error}'
-                )
+            if self.load_error:
+                self.open_dialog(message_dialog,
+                    "Erro no Arquivo JSON",
+                    f'Não foi possível carregar o arquivo "{self.JSON}", um novo será gerado\n\n{self.load_error}'
+                    )
 
-        del self.load_error
+            del self.load_error
+
+            Window.bind(on_request_close=self.on_request_close)
 
 
     def on_request_close(self, *args):
@@ -381,7 +510,7 @@ class CineFile(MDApp):
 
     # LISTA PRINCIPAL
     def load_movies(self, movies_info):
-        lista = self.root.ids.lista_filmes
+        lista = self.screen.lista_filmes
         lista.add_many_item_widgets(len(movies_info)+3) # OPÇÃO DE LIMITAR OS FILMES CARREGADOS
         lista.order_list(self.moviesdb, self.data["current_order"]) # ALTERAR
 
@@ -400,7 +529,7 @@ class CineFile(MDApp):
             # movie_info = self.get_info_imdb(results, index, movie_info, allow_substitute)
 
         # ADD MOVIE TO LIST
-        lista = self.root.ids.lista_filmes
+        lista = self.screen.lista_filmes
         if not lista.children[0].isempty():
             lista.add_item_widget()    
         lista.add_item_info(self.moviesdb.get_table_len()[0][0], movie_info)
@@ -423,7 +552,7 @@ class CineFile(MDApp):
             # movie_info = self.get_info_imdb(results, index, movie_info, allow_substitute)
 
         # EDIT MOVIE IN LIST
-        lista = self.root.ids.lista_filmes
+        lista = self.screen.lista_filmes
         lista.edit_item_info(list(reversed(lista.children)).index(obj), movie_info)
 
         # EDIT MOVIE IN DB
@@ -438,7 +567,7 @@ class CineFile(MDApp):
 
     def delete_movie_item(self, obj, close_dialog):
         # REMOVE MOVIE IN LIST
-        self.root.ids.lista_filmes.remove_widget(obj)
+        self.screen.lista_filmes.remove_widget(obj)
 
         # REMOVE MOVIE IN DB
         self.moviesdb.delete_entry(self.find_rowid_in_database(obj))
@@ -466,7 +595,7 @@ class CineFile(MDApp):
         if query == self.data["current_order"]:
             return
         
-        lista = self.root.ids.lista_filmes
+        lista = self.screen.lista_filmes
         lista.clear_item_infos()
         lista.order_list(self.moviesdb, query)
         self.selected.deselect(self)
@@ -498,7 +627,7 @@ class CineFile(MDApp):
         self.menu = MDDropdownMenu(
             items = items,
             width_mult=3,
-            max_height="147dp",
+            max_height="196dp",
             border_margin="4dp",
             background_color=self.theme_cls.bg_light,
             radius=["2dp"]
@@ -506,9 +635,9 @@ class CineFile(MDApp):
 
     def open_menu(self, button):
         if button.parent.parent == self.selected:
-            self.menu.max_height = "196dp"
+            self.menu.max_height = "245dp"
         else:
-            self.menu.max_height = "147dp"
+            self.menu.max_height = "196dp"
 
         self.menu.caller = button
         self.menu.open()
@@ -519,6 +648,12 @@ class CineFile(MDApp):
 
         if item == "Detalhes":
             self.open_dialog(movie_detail_dialog, filme)
+
+        elif item == "IMDb":
+            title = " ".join(reversed(filme.get_texts()[0].split(" - "))) #titulo 2011
+            self.search_movie(title)
+            current_screen = self.root.ids.screen_mg.change_screen("movie_results", "RiseInTransition()")
+            current_screen.show_searching()
 
         elif item == "Editar":
             self.open_dialog(edit_movie_dialog, filme)
@@ -534,11 +669,10 @@ class CineFile(MDApp):
                 filme.deselect(self)
                 self.selected = None
                 self.data["selected"] = ""
-                self.root.ids.card_sorteador.set_texts("Nenhum Filme Sorteado")
-
+                self.screen.card_sorteador.set_texts("Nenhum Filme Sorteado")
 
         elif item == "EasterEgg": # CRIAR UMA FUNÇÃO PROPRIA PRO MINI GAME
-            self.root.ids.avatar.icon = "emoticon-cool-outline"
+            self.screen.avatar.icon = "emoticon-cool-outline"
 
 
     # SPEED DIAL
@@ -546,14 +680,14 @@ class CineFile(MDApp):
         if self.on_selection:
             return
 
-        self.root.ids.speed_dial.close_stack()
+        self.screen.speed_dial.close_stack()
         button = instance.icon
 
         if button == "playlist-plus": # Adicionar
             self.open_dialog(add_movie_dialog)
 
-        # elif button == "pencil": # Editar
-        #     self.select_movies_edit()
+        elif button == "movie-search": # Procurar IMDb
+            pass
 
         elif button == "dice-3": # Sortear
             self.select_random_movie()
@@ -566,17 +700,17 @@ class CineFile(MDApp):
 
     # SPEED DIAL BUTTONS
     def select_random_movie(self):
-        lista = self.root.ids.lista_filmes
+        lista = self.screen.lista_filmes
         if self.selected:
             self.selected.deselect(self)
 
         self.selected = lista.select_random(self)
         self.data["selected"] = self.selected.text
 
-        self.root.ids.card_sorteador.set_texts(self.selected.text, self.selected.secondary_text)
+        self.screen.card_sorteador.set_texts(self.selected.text, self.selected.secondary_text)
 
         # SCROLL PARA O FILME SORTEADO
-        self.root.ids.scroll_filmes.scroll_to(self.selected, 210, True)
+        self.screen.scroll_filmes.scroll_to(self.selected, 210, True)
 
     def select_movies_delete(self):
         self.selection_mode(True)
@@ -674,11 +808,11 @@ class CineFile(MDApp):
         self.on_selection = on
 
         if on:
-            for movie in self.root.ids.lista_filmes.children:
+            for movie in self.screen.lista_filmes.children:
                 movie.change_icon("checkbox-blank-outline")
 
         else:
-            for movie in self.root.ids.lista_filmes.children:
+            for movie in self.screen.lista_filmes.children:
                 movie.change_icon("dots-vertical")
                 if not movie.isempty():
                     movie.rightIcon.text_color = self.theme_cls.opposite_bg_darkest
@@ -688,15 +822,15 @@ class CineFile(MDApp):
 
     def load_selected(self):
         selected_name = self.data["selected"]
-        self.selected = self.root.ids.lista_filmes.select_item(self, selected_name)
+        self.selected = self.screen.lista_filmes.select_item(self, selected_name)
 
         if self.selected:
-            self.root.ids.card_sorteador.set_texts(self.selected.text, self.selected.secondary_text)
+            self.screen.card_sorteador.set_texts(self.selected.text, self.selected.secondary_text)
 
             # SCROLL PARA O FILME SORTEADO
-            self.root.ids.scroll_filmes.scroll_to(self.selected, 210, True)
+            self.screen.scroll_filmes.scroll_to(self.selected, 210, True)
         else:
-            self.root.ids.card_sorteador.set_texts("Nenhum Filme Sorteado")       
+            self.screen.card_sorteador.set_texts("Nenhum Filme Sorteado")       
 
 
     # BACKEND
@@ -745,9 +879,9 @@ class CineFile(MDApp):
         self.data['profile']['api_key'] = profile_info[2]
         self.data['profile']['profile_icon'] = profile_info[3]
 
-        self.root.ids.nickname.text = profile_info[0]
-        self.root.ids.accountname.text = "@" + profile_info[1]
-        self.root.ids.profile_icon.icon = profile_info[3]
+        self.screen.nickname.text = profile_info[0]
+        self.screen.accountname.text = "@" + profile_info[1]
+        self.screen.profile_icon.icon = profile_info[3]
 
     def change_theme(self, *args):
         if self.theme_cls.theme_style == "Light":
@@ -774,6 +908,154 @@ class CineFile(MDApp):
 
     def save_files(self, *args):
         save_json(self.data, self.path, self.JSON)
+
+
+
+    def select_movie_info(self, *args):
+        current_screen = self.root.ids.screen_mg.current_screen
+
+        index = current_screen.ids.container.children[0].get_current_index()
+        movie_id = current_screen.items[index]["id"]
+
+        self.open_dialog(which_movie_info_dialog, movie_id)
+
+
+    def display_movie_info(self, movie_id):
+        info_type, aditional = self.dialog.get_info(True)
+
+        self.search_movie_info(movie_id, info_type, aditional)
+        current_screen = self.root.ids.screen_mg.change_screen("movie_results", "RiseInTransition()")
+        current_screen.show_searching()
+
+
+
+
+    # IMDb API
+    def info_type(self, *args):
+        return {
+            'Basic': ('title', 'year', 'id', 'image', 'genres', 'runtimeStr'),
+
+            'Complete': ('title', 'originalTitle', 'type', 'year', 'image', 'runtimeStr', 'plot', 'plotLocal', 'directors',
+                'directorList', 'writers', 'writerList', 'stars', 'starList', 'actorList', 'genres', 'genreList', 'contentRating',
+                'imDbRating', 'imDbRatingVotes', 'keywords', 'keywordList', 'similars'),
+
+            'Aditional': ('fullActor', 'fullCast', 'posters', 'images', 'trailer', 'ratings', 'wikipedia'),
+
+            'All': ('id', 'title', 'originalTitle', 'fullTitle', 'type', 'year', 'image', 'releaseDate', 'runtimeMins', 'runtimeStr',
+                'plot', 'plotLocal', 'plotLocalIsRtl', 'awards', 'directors', 'directorList', 'writers', 'writerList', 'stars',
+                'starList', 'actorList', 'fullCast', 'genres', 'genreList', 'companies', 'companyList', 'countries', 'countryList',
+                'languages', 'languageList', 'contentRating', 'imDbRating', 'imDbRatingVotes', 'metacriticRating', 'ratings',
+                'wikipedia', 'posters', 'images', 'trailer', 'boxOffice', 'tagline', 'keywords', 'keywordList', 'similars',
+                'tvSeriesInfo', 'tvEpisodeInfo', 'errorMessage'),
+
+            'None': ()
+            }
+
+
+    # basic function for making get requests to the API
+    def make_request(self, url, sucess_func, *args):
+        req = UrlRequest(url="https://" + urllib.parse.quote(url), timeout=5,
+            on_success=lambda x, y: sucess_func(x, y, *args),
+            on_redirect=self.redirect,
+            on_failure=self.failure,
+            on_error=self.error)
+
+
+    # request returned wanted json
+    def process_result(func):
+
+        def wrapper(self, req, result, *args):
+            print("sucess!") # remover ou mudar ação
+
+            if result['errorMessage']:
+                self.root.ids.screen_mg.change_screen("main")
+                self.open_dialog(message_dialog, "Erro ao buscar filme", result["errorMessage"])
+                return 
+
+            return func(self, result, *args)
+
+        return wrapper
+
+
+    @process_result
+    def get_movies(self, results):
+
+        # for result in results['results']:
+        #     print(result['title'])
+        #     print(result['id'])
+        #     print(result['image'])
+        #     print(result['description'])
+        #     print("")
+
+        current_screen = self.root.ids.screen_mg.get_screen("movie_results")
+        if results["results"]:
+            current_screen.show_results(results["results"])
+        else:
+            current_screen.show_not_found()
+
+
+    @process_result
+    def get_movie_info(self, result, info_type):
+        infos = self.info_type()[info_type] + self.info_type()["Aditional"]
+        print(infos, '\n')
+
+        for key, value in result.items():
+            if value and key in infos:
+                print(f"{key}: {value}")
+
+
+    @process_result
+    def get_api_calls(self, result):
+        print(result)
+
+
+    # request redirected
+    def redirect(self, *args):
+        print("redirect")
+        for arg in args:
+            print(arg)
+
+
+    # request failed
+    def failure(self, *args):
+        print("failure")
+        for arg in args:
+            print(arg)
+
+
+    # request gave an error
+    def error(self, obj, message, *args):
+        print("error")
+        error_dict = {
+            11001: "Verifique sua conexão com a internet"
+        }
+
+        if message.args[-1] == "The read operation timed out":
+            print("timeout error")
+            # self.make_request(obj.url[8:], obj.on_success)
+            # print(obj.url[8:])
+            # print(obj.on_success)
+            # obj.run()
+
+        # else:
+        self.root.ids.screen_mg.change_screen("main")
+        self.open_dialog(message_dialog, "Erro ao buscar filme", error_dict.get(message.args[0], str(message)))
+
+
+    def search_movie(self, title):
+        url = "/".join((self.baselink, "SearchMovie", self.api_key, title))
+        self.make_request(url, self.get_movies)
+
+
+    def search_movie_info(self, movie_id, info_type, aditional):
+        url = "/".join((self.baselink, "Title", self.api_key, movie_id, ",".join(aditional)))
+        self.make_request(url, self.get_movie_info, info_type)
+
+
+    def get_remaining_requests(self, *args):
+        url = "/".join(("imdb-api.com/API/Usage", self.api_key))
+        self.make_request(url, self.get_api_calls)
+
 
 
 if __name__ == "__main__":

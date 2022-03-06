@@ -15,13 +15,15 @@ def default_data():
         "profile": {
         "nickname": "Meu Perfil",
         "acccountname": "user",
+        "email": "pedrodlmchaves@gmail.com",
+        "password": "0108",
         "api_key": "None",
         "profile_icon": "account-circle"
         },
         "color": "Red",
         "color_hue": "700",
         "accent": "Yellow",
-        "accent_hue": "500",
+        "accent_hue": "400",
         "theme": "Dark",
         "time_format": "%d/%m - %Hh%M",
         "current_order": "ORDER BY title ASC, year DESC",

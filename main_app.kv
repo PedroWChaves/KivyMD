@@ -1,0 +1,432 @@
+#:import d dialogs
+#:import clc kivy.clock.Clock
+
+
+MDNavigationLayout:
+
+	MyScreenManager:
+		id: screen_mg
+
+		# onde as screens sao colocadas			
+
+    MDNavigationDrawer:
+    	id: nav_drawer
+	    orientation: "vertical"
+	    padding: "0dp"
+	    spacing: "0dp"
+
+	    MDCardElev:
+	    	orientation: "horizontal"
+	    	elevation: 10
+	    	md_bg_color: app.theme_cls.primary_color
+	    	padding: "8dp"
+	    	size_hint: (1, 0.20)
+
+	    	BoxLayout:
+	    		size_hint: 0.3, 1
+
+		        MDIcon:
+		            id: profile_icon
+		            icon: app.data['profile']['profile_icon']
+		            font_size: "60dp"
+		            theme_text_color: "Custom"
+		            text_color: app.theme_cls.bg_dark
+			    	pos_hint: {"center_y": 0.5, "center_x": 0.5}
+			    	size_hint: None, None
+
+		    BoxLayout:
+		    	orientation: "vertical"
+		    	padding: ["0dp", "20dp"]
+		    	size_hint: 1, 1
+
+			    MDLabel:
+			    	id: nickname
+			        text: app.data['profile']['nickname']
+			        font_style: "H3"
+			        font_size: "20dp"
+		            theme_text_color: "Custom"
+		            text_color: app.theme_cls.opposite_text_color
+
+			    MDLabel:
+			    	id: accountname
+			        text: "@" + app.data['profile']['accountname']
+			        font_style: "Caption"
+			        font_size: "14dp"
+		            theme_text_color: "Custom"
+		            text_color: app.theme_cls.opposite_text_color
+
+	    ScrollView:
+	    	MDList:
+			    padding: 10
+
+			    OneLineIconListItem:
+			    	text: "Editar Meus Dados"
+			    	on_release: app.open_dialog(d.edit_profile_dialog )
+			    	
+			    	IconLeftWidgetWithoutTouch:
+			    		icon: "card-account-details"
+
+			    OneLineIconListItem:
+			    	text: "Minhas Listas"
+
+			    	IconLeftWidgetWithoutTouch:
+			    		icon: "format-list-bulleted"
+
+			    OneLineIconListItem:
+			    	text: "Cor e Tema"
+			    	on_release: app.change_theme()
+
+			    	IconLeftWidgetWithoutTouch:
+			    		icon: "palette"
+
+			    # OneLineIconListItem:
+			    # 	text: "Easter Eggs"
+
+			    # 	IconLeftWidgetWithoutTouch:
+			    # 		icon: 'penguin'
+
+			    OneLineIconListItem:
+			    	text: "Configurações"
+			    	on_release: app.show_files_dir()
+			    	
+			    	IconLeftWidgetWithoutTouch:
+			    		icon: "cog"
+
+			    # OneLineIconListItem:
+			    # 	text: "Ajuda"
+
+			    # 	IconLeftWidgetWithoutTouch:
+			    # 		icon: "help-circle"
+
+			    OneLineIconListItem:
+			    	text: "Salvar Arquivo"
+			    	on_release: app.save_files()
+
+			    	IconLeftWidgetWithoutTouch:
+			    		icon: "content-save"
+
+			    OneLineIconListItem:
+			    	text: "Trocar de Conta"
+		    		on_release:
+		    			app.root.ids.nav_drawer.set_state("toggle")
+		    			screen_mg.change_screen("log_in", "FallOutTransition()")
+
+			    	IconLeftWidgetWithoutTouch:
+			    		icon: 'account-switch-outline'
+
+			    OneLineIconListItem:
+			    	text: "Sair"
+
+			    	IconLeftWidgetWithoutTouch:
+			    		icon: 'exit-to-app'
+
+
+<MainScreen>:
+	name: "main"
+
+	MDBoxLayout:
+		orientation: 'vertical'
+
+		MDToolbar:
+			id: toolbar
+			title: "CineFile"
+	        left_action_items: [['menu', lambda x: app.root.ids.nav_drawer.set_state("toggle")]]
+	        right_action_items: [["magnify", app.change_toolbar],["wifi-strength-outline", app.check_internet]]#app.get_remaining_requests]]
+			background_color: app.theme_cls.primary_color
+
+
+		MDTabs:
+			tab_bar_height: "25dp"
+
+			Tab:
+				id: tab_filmes
+				title: "Filmes"
+			
+				ScrollView:
+					id: scroll_filmes
+					#effect_cls: "ScrollEffect", "DampedScrollEffect", "OpacityScrollEffect"
+
+					MovieList:
+						cols: 1
+						id: lista_filmes	
+
+				SpeedDialButton:
+					id: speed_dial
+					data: self.buttons()
+					root_button_anim: True
+					label_text_color: "white"
+					bg_color_root_button: app.theme_cls.primary_dark
+					callback: app.speed_dial_callback
+
+			Tab:
+				title: "Listas"
+
+				FitImage:
+					source: "https://imdb-api.com/images/original/MV5BMjAxMzY3NjcxNF5BMl5BanBnXkFtZTcwNTI5OTM0Mw@@._V1_Ratio0.6762_AL_.jpg"
+				# ScrollView:
+				# 	MDList:
+				# 		id: lista_listas
+
+			Tab:
+				title: "Sorteador"
+
+				MDFloatLayout:
+					MDCardElev:
+						orientation: "vertical"
+						size_hint: (0.9, 0.25)
+						pos_hint: {'center_x': 0.5, 'center_y': 0.8}
+						elevation: 7
+						radius: [dp(20), dp(20), dp(20), dp(20)]
+
+						MDLabel:
+							text: "Sorteado:"
+							theme_text_color: "Secondary"
+							size_hint: (1, 0.3)
+							pos_hint: {'top': 1, 'center_x': 0.55}
+
+						MDSeparator:
+							height: "1dp"
+							pos_hint: {'top': 1}
+							size_hint_y: None
+
+						CardMovieItem: # MovieListItem / TwoLineListItem
+							id: card_sorteador
+							size_hint: (1, 1)
+							pos_hint: {'center_y': 0.5}
+							on_release: app.open_dialog(d.movie_detail_dialog, card_sorteador)
+
+						MDFlatButton:
+							text: "Marcar Como Assistido"
+							theme_text_color: "Custom"
+							text_color: app.theme_cls.accent_light
+							size_hint: (1, 0.3)
+							pos_hint: {'bottom': 1}
+							on_release: app.open_dialog(d.edit_movie_dialog, card_sorteador)
+
+					MDFillRoundFlatButton:
+						text: "Prioridades"
+						font_size: "18dp"
+						theme_text_color: 'Custom'
+	                    md_bg_color: app.theme_cls.bg_light
+	                    text_color: app.theme_cls.text_color
+						size_hint: (0.8, 0.1)
+						pos_hint: {'center_x': 0.5, 'center_y': 0.55}
+						on_release: app.open_dialog(d.prioridade_dialog)
+
+					MDFillRoundFlatButton:
+						text: "Categorias"
+						font_size: "18dp"
+						theme_text_color: 'Custom'
+	                    md_bg_color: app.theme_cls.bg_light
+	                    text_color: app.theme_cls.text_color
+						size_hint: (0.8, 0.1)
+						pos_hint: {'center_x': 0.5, 'center_y': 0.4}
+						on_release: app.open_dialog(d.categoria_dialog)
+
+					MDFillRoundFlatButton:
+						text: "Lançamento"
+						font_size: "18dp"
+						theme_text_color: 'Custom'
+	                    md_bg_color: app.theme_cls.bg_light
+	                    text_color: app.theme_cls.text_color
+						size_hint: (0.8, 0.1)
+						pos_hint: {'center_x': 0.5, 'center_y': 0.25}
+						on_release: app.open_dialog(d.lancamento_dialog)
+
+					MDFillRoundFlatButton:
+						text: "SORTEAR!"
+						font_size: "18dp"
+						size_hint: (0.6, 0.1)
+						pos_hint: {"center_x": 0.5, "center_y": 0.1}
+						on_release: app.select_random_movie()
+
+
+
+<LogInScreen>:
+	name: "log_in"
+	# md_bg_color: app.theme_cls.accent_light
+
+	MDFloatLayout:
+
+        MDIcon:
+            icon: "theater"
+            font_size: "90dp"
+            theme_text_color: "Custom"
+            text_color: app.theme_cls.primary_color
+	    	pos_hint: {"center_y": 0.75, "center_x": 0.5}
+	    	size_hint: None, None
+
+	    MDTextField:
+	    	id: email
+	    	hint_text: "E-mail ou Usuário:"
+	    	icon_left: "account"
+	    	icon_left_color_focus: app.theme_cls.accent_light
+	    	line_color_focus: app.theme_cls.accent_color
+	    	hint_text_color_focus: app.theme_cls.accent_color
+	    	text_color_focus: app.theme_cls.text_color
+	    	pos_hint: {"center_y": 0.55, "center_x": 0.5}
+	    	size_hint: 0.8, None
+
+    	MDTextField:
+    		id: password
+    		hint_text: "Senha:"
+    		icon_left: "lock"
+    		password: True
+	    	icon_left_color_focus: app.theme_cls.accent_light
+    		line_color_focus: app.theme_cls.accent_color
+    		hint_text_color_focus: app.theme_cls.accent_color
+    		text_color_focus: app.theme_cls.text_color
+	    	pos_hint: {"center_y": 0.45, "center_x": 0.5}
+	    	size_hint: 0.8, None
+
+	    MDTextButton:
+	    	text: "Esqueci a Senha"
+	    	font_size: "14dp"
+	    	theme_text_color: "Secondary"
+	    	pos_hint: {"center_y": 0.40, "right": 0.9}
+	    	# on_release: app.root.ids.screen_mg.current = "sign_up"
+
+	    MDRaisedButton:
+	    	text: "Entrar"
+	    	font_size: "16dp"
+	    	pos_hint: {"center_y": 0.25, "center_x": 0.5}
+	    	size_hint: 0.8, 0.05
+	    	on_release: app.root.ids.screen_mg.get_login_info(app, email, password)
+
+	    MDTextButton:
+	    	text: "Criar Conta"
+	    	font_size: "14dp"
+	    	theme_text_color: "Custom"
+            text_color: app.theme_cls.accent_light
+	    	halign: "center"
+	    	pos_hint: {"center_y": 0.175, "center_x": 0.5}
+	    	on_release: app.root.ids.screen_mg.change_screen("sign_up", "SlideTransition(direction='right')")
+
+
+<SignUpScreen>:
+	name: "sign_up"
+
+	MDFloatLayout:
+		id: container
+		orientation: "vertical"
+
+		MDIconButton:
+			icon: "arrow-left"
+            theme_text_color: "Secondary"
+	    	pos_hint: {"top": 1, "left": 0.85}
+			on_release: app.root.ids.screen_mg.change_screen("log_in")
+
+        MDIcon:
+            icon: "account-circle"
+            font_size: "45dp"
+            theme_text_color: "Custom"
+            text_color: app.theme_cls.primary_color
+	    	pos_hint: {"center_y": 0.9, "center_x": 0.5}
+	    	size_hint: None, None
+
+		MDTextField:
+			id: profile_name
+	    	hint_text: "Nome do Perfil:"
+	    	icon_left: "card-account-details"
+	    	icon_left_color_focus: app.theme_cls.accent_light
+	    	line_color_focus: app.theme_cls.accent_color
+	    	hint_text_color_focus: app.theme_cls.accent_color
+	    	text_color_focus: app.theme_cls.text_color
+	    	pos_hint: {"center_y": 0.8, "center_x": 0.5}
+	    	size_hint: 0.8, None
+
+		MDTextField:
+			id: user_name
+	    	hint_text: "Usuário:"
+	    	icon_left: "at"
+	    	helper_text: "Deve ser um nome único"
+	    	icon_left_color_focus: app.theme_cls.accent_light
+	    	line_color_focus: app.theme_cls.accent_color
+	    	hint_text_color_focus: app.theme_cls.accent_color
+	    	text_color_focus: app.theme_cls.text_color
+	    	pos_hint: {"center_y": 0.7, "center_x": 0.5}
+	    	size_hint: 0.8, None
+
+	    MDTextField:
+	    	id: email
+    		hint_text: "E-mail:"
+    		icon_left: "email"
+	    	icon_left_color_focus: app.theme_cls.accent_light
+    		line_color_focus: app.theme_cls.accent_color
+    		hint_text_color_focus: app.theme_cls.accent_color
+    		text_color_focus: app.theme_cls.text_color
+	    	pos_hint: {"center_y": 0.6, "center_x": 0.5}
+	    	size_hint: 0.8, None
+
+    	MDTextField:
+    		id: password
+    		hint_text: "Senha:"
+    		icon_left: "lock"
+    		password: True
+	    	icon_left_color_focus: app.theme_cls.accent_light
+    		line_color_focus: app.theme_cls.accent_color
+    		hint_text_color_focus: app.theme_cls.accent_color
+    		text_color_focus: app.theme_cls.text_color
+	    	pos_hint: {"center_y": 0.5, "center_x": 0.5}
+	    	size_hint: 0.8, None
+
+	    MDTextField:
+	    	id: password2
+    		hint_text: "Repetir a Senha:"
+    		icon_left: "lock"
+    		password: True
+	    	icon_left_color_focus: app.theme_cls.accent_light
+    		line_color_focus: app.theme_cls.accent_color
+    		hint_text_color_focus: app.theme_cls.accent_color
+    		text_color_focus: app.theme_cls.text_color
+	    	pos_hint: {"center_y": 0.4, "center_x": 0.5}
+	    	size_hint: 0.8, None
+
+	    MDTextField:
+	    	id: api_key
+    		hint_text: "API key do IMDb:"
+    		icon_left: "key"
+    		helper_text: "opicional*"
+	    	icon_left_color_focus: app.theme_cls.accent_light
+    		line_color_focus: app.theme_cls.accent_color
+    		hint_text_color_focus: app.theme_cls.accent_color
+    		text_color_focus: app.theme_cls.text_color
+	    	pos_hint: {"center_y": 0.3, "center_x": 0.5}
+	    	size_hint: 0.8, None
+
+	    MDRaisedButton:
+	    	text: "Cadastrar-se"
+	    	font_size: "16dp"
+	    	pos_hint: {"center_y": 0.2, "center_x": 0.5}
+	    	size_hint: 0.8, 0.05
+	    	on_release: app.root.ids.screen_mg.get_signup_info(app, container)
+
+	    LeftCheck:
+	    	text: "Concordo em criar uma conta no IMDb API"
+	    	pos_hint: {"center_y": 0.1, "center_x": 0.5}
+	    	size_hint: 0.8, None
+
+
+<SearchMovieResultsScreen>:
+	name: "movie_results"
+
+	MDBoxLayout:
+		orientation: 'vertical'
+		padding: ["0dp", "0dp", "0dp", "20dp"]
+		spacing: "20dp"
+
+		MDToolbar:
+			id: toolbar
+			title: ""
+	        left_action_items: [['arrow-left', lambda x: app.root.ids.screen_mg.change_screen("main", "SlideTransition(direction='left')")]]
+	  #       right_action_items: [['check']]
+
+	    MDFloatLayout:
+	    	id: container
+
+<MovieInfoScreen>:
+	name: "movie_info"
+
+	MDBoxLayout:
+		orientation: 'vertical'
+		
