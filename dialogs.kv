@@ -1,0 +1,428 @@
+#:import d dialogs
+
+# DIALOGS
+<CancelButton>:
+	text: "CANCELAR"
+    font_size: "12dp"
+    theme_text_color: "Custom"
+    text_color: app.theme_cls.primary_color
+    on_release: app.close_dialog()
+
+<OkayButton>:
+	text: "OK"
+    font_size: "12dp"
+    md_bg_color: app.theme_cls.primary_color
+
+<BaseDialog>:
+    on_dismiss: d.delete_dialog()
+
+<BaseContent>:
+	size_hint: (0.9, None)
+	orientation: "vertical"
+	padding: "10dp"
+
+# editar perfil
+<EditProfileContent>:
+	height: "250dp"
+
+	MDTextField:
+		id: nickname
+		hint_text: "Nome do usuário:"
+		text: root.nickname
+		line_color_focus: app.theme_cls.accent_color
+		hint_text_color_focus: app.theme_cls.accent_color
+		text_color_focus: app.theme_cls.text_color
+
+	MDTextField:
+		id: accountname
+		hint_text: "@ do usuário:"
+		text: root.accountname
+		line_color_focus: app.theme_cls.accent_color
+		hint_text_color_focus: app.theme_cls.accent_color
+		text_color_focus: app.theme_cls.text_color
+
+	MDTextField:
+		id: api_key
+		hint_text: "API_key do IMDB:"
+		text: root.api_key
+		line_color_focus: app.theme_cls.accent_color
+		hint_text_color_focus: app.theme_cls.accent_color
+		text_color_focus: app.theme_cls.text_color
+
+	MDTextField:
+		id: profile_icon
+		hint_text: "Icone do perfil (Material Design):"
+		text: root.profile_icon
+		line_color_focus: app.theme_cls.accent_color
+		hint_text_color_focus: app.theme_cls.accent_color
+		text_color_focus: app.theme_cls.text_color
+
+# detalhes do filme
+<MovieDetailContent>:
+	height: "420dp"
+
+	FitImage:
+		source: "https://imdb-api.com/images/original/MV5BMjAxMzY3NjcxNF5BMl5BanBnXkFtZTcwNTI5OTM0Mw@@._V1_Ratio0.6762_AL_.jpg"
+		size: "200dp", "300dp"
+		size_hint: None, None
+		pos_hint: {"center_x": 0.5, "center_y": 0.5}
+
+	MDLabel:
+		id: titulo
+		text: f"{root.year} - {root.title}"
+		font_size: "20dp"
+		size_hint: 1, 0.8
+
+	BoxLayout:
+		orientation: "horizontal"
+		size_hint: 1, 0.3
+
+		MDLabel:
+			id: categorias
+			text: " / ".join(root.genres.split(","))
+			text_color: app.theme_cls.secondary_text_color
+			pos_hint: {"center_y": 0.5, "center_x": 0.5}
+
+		MDIcon:
+			id: prioridade
+			icon: f"numeric-{root.priority}-circle"
+			pos_hint: {"center_y": 0.5, "center_x": 0.5}
+
+# adicionar filme
+<AddMovieContent>:
+	height: "300dp"
+
+	MDTextField:
+		id: titulo
+		hint_text: "Título:"
+		text: root.title
+		helper_text: "Não usar ('), use (`)"
+		required: True
+		line_color_focus: app.theme_cls.accent_color
+		hint_text_color_focus: app.theme_cls.accent_color
+		text_color_focus: app.theme_cls.text_color
+
+	MDTextField:
+		id: categoria1
+		hint_text: "ID no IMDB:"
+		text: root.imdbId
+		line_color_focus: app.theme_cls.accent_color
+		hint_text_color_focus: app.theme_cls.accent_color
+		text_color_focus: app.theme_cls.text_color
+
+	MDTextField:
+		id: ano
+		hint_text: "Ano:"
+		text: root.year
+		line_color_focus: app.theme_cls.accent_color
+		hint_text_color_focus: app.theme_cls.accent_color
+		text_color_focus: app.theme_cls.text_color
+
+	MDTextField:
+		id: categoria2
+		hint_text: "Categorias:"
+		helper_text: 'separe com ","'
+		text: root.genres
+		line_color_focus: app.theme_cls.accent_color
+		hint_text_color_focus: app.theme_cls.accent_color
+		text_color_focus: app.theme_cls.text_color
+
+	MDTextField:
+		id: prioridade
+		hint_text: "Prioridade:"
+		text: root.priority
+		line_color_focus: app.theme_cls.accent_color
+		hint_text_color_focus: app.theme_cls.accent_color
+		text_color_focus: app.theme_cls.text_color
+
+
+# ordenar lista
+<ListOrderContent>:
+	height: "320dp"
+
+	MDSeparator:
+		height: "1dp"
+		size_hint_y: None
+
+	OrderItem:
+		text: "Lançamento"
+		righticon: "sort-numeric-descending"
+
+	OrderItem:
+		text: "Título"
+		righticon: "sort-alphabetical-ascending"
+
+	OrderItem:
+		text: "Categoria 1"
+		righticon: "sort-alphabetical-ascending"
+
+	OrderItem:
+		text: "Categoria 2"
+		righticon: "sort-alphabetical-ascending"
+
+	OrderItem:
+		text: "Prioridade"
+		righticon: "sort-numeric-descending"
+
+	OrderItem:
+		text: "Adicionado"
+		righticon: "sort-numeric-ascending"
+
+	OrderItem:
+		text: "Aleatório"
+		righticon: "sort-ascending"
+
+	MDSeparator:
+		height: "1dp"
+		size_hint_y: None
+
+
+# config prioridade
+<PrioridadeContent>:
+	height: "200dp"
+
+	MDSeparator:
+		height: "1dp"
+		size_hint_y: None
+
+	RightCheck:
+		text: "Ignorar Todas:"
+		group: "prioridade"
+
+	BoxLayout:
+		orientation: "horizontal"
+
+		MDLabel:
+			text: "Acima de:"
+			pos_hint: {'center_x': 0.3, 'center_y': 0.5}
+
+		MDTextField:
+			hint_text: "num"
+
+		MDCheckbox:
+		    group: "prioridade"
+			pos_hint: {'center_y': 0.5, "right": 0.9}
+		    size_hint: None, None
+		    size: dp(40), dp(40)
+		    selected_color: (app.theme_cls.accent_light if app.theme_cls.theme_style == "Dark" else app.theme_cls.primary_light)
+
+	BoxLayout:
+		orientation: "horizontal"
+
+		MDLabel:
+			text: "Abaixo de:"
+			pos_hint: {'center_x': 0.3, 'center_y': 0.5}
+
+		MDTextField:
+			hint_text: "num"
+		
+		MDCheckbox:
+		    group: "prioridade"
+			pos_hint: {'center_y': 0.5, "right": 0.9}
+		    size_hint: None, None
+		    size: dp(40), dp(40)
+		    selected_color: (app.theme_cls.accent_light if app.theme_cls.theme_style == "Dark" else app.theme_cls.primary_light)
+
+# config categoria
+<CategoriaContent>:
+	height: "260dp"
+
+	MDSeparator:
+		height: "1dp"
+		size_hint_y: None
+
+	RightCheck:
+		text: "Todas:"
+		group: "categoria"
+
+	BoxLayout:
+		orientation: "horizontal"
+
+		MDLabel:
+			text: "Somente:"
+			pos_hint: {'center_x': 0.3, 'center_y': 0.5}
+
+		MDCheckbox:
+		    group: "categoria"
+			pos_hint: {'center_y': 0.5, "right": 0.9}
+		    size_hint: None, None
+		    size: dp(40), dp(40)
+		    selected_color: (app.theme_cls.accent_light if app.theme_cls.theme_style == "Dark" else app.theme_cls.primary_light)
+
+	BoxLayout:
+		orientation: "horizontal"
+
+		MDTextField:
+			hint_text: "Categoria"
+			pos_hint: {"center_x": 0.5, "bottom": 1}
+			size_hint: (0.35, None)
+
+		MDLabel:
+			text: "ou"
+			pos_hint: {"center_x": 0.5, "bottom": 1}
+			size_hint: (0.3, 1)
+			halign: "center"
+
+		MDTextField:
+			hint_text: "Categoria"
+			pos_hint: {"center_x": 0.5, "bottom": 1}
+			size_hint: (0.35, None)
+
+	BoxLayout:
+		orientation: "horizontal"
+
+		MDLabel:
+			text: "Exceto:"
+			pos_hint: {'center_x': 0.3, 'center_y': 0.5}
+
+		MDCheckbox:
+		    group: "categoria"
+			pos_hint: {'center_y': 0.5, "right": 0.9}
+		    size_hint: None, None
+		    size: dp(40), dp(40)
+		    selected_color: (app.theme_cls.accent_light if app.theme_cls.theme_style == "Dark" else app.theme_cls.primary_light)
+
+	BoxLayout:
+		orientation: "horizontal"
+
+		MDTextField:
+			hint_text: "Categoria"
+			pos_hint: {"center_x": 0.5, "bottom": 1}
+			size_hint: (0.35, None)
+
+		MDLabel:
+			text: "e"
+			pos_hint: {"center_x": 0.5, "bottom": 1}
+			size_hint: (0.3, 1)
+			halign: "center"
+
+		MDTextField:
+			hint_text: "Categoria"
+			pos_hint: {"center_x": 0.5, "bottom": 1}
+			size_hint: (0.35, None)
+
+# config lançamento
+<LancamentoContent>:
+	height: "260dp"
+
+	MDSeparator:
+		height: "1dp"
+		size_hint_y: None
+
+	RightCheck:
+		text: "Todos:"
+		group: "lancamento"
+
+	BoxLayout:
+		orientation: "horizontal"
+
+		MDLabel:
+			text: "Somente:"
+			pos_hint: {'center_x': 0.3, 'center_y': 0.5}
+
+		MDCheckbox:
+		    group: "lancamento"
+			pos_hint: {'center_y': 0.5, "right": 0.9}
+		    size_hint: None, None
+		    size: dp(40), dp(40)
+		    selected_color: (app.theme_cls.accent_light if app.theme_cls.theme_style == "Dark" else app.theme_cls.primary_light)
+
+	BoxLayout:
+		orientation: "horizontal"
+
+		MDTextField:
+			hint_text: "Ano"
+			pos_hint: {"center_x": 0.5, "bottom": 1}
+			size_hint: (0.35, None)
+
+		MDLabel:
+			text: "até"
+			pos_hint: {"center_x": 0.5, "bottom": 1}
+			size_hint: (0.3, 1)
+			halign: "center"
+
+		MDTextField:
+			hint_text: "Ano"
+			pos_hint: {"center_x": 0.5, "bottom": 1}
+			size_hint: (0.35, None)
+
+	BoxLayout:
+		orientation: "horizontal"
+
+		MDLabel:
+			text: "Exceto:"
+			pos_hint: {'center_x': 0.3, 'center_y': 0.5}
+
+		MDCheckbox:
+		    group: "lancamento"
+			pos_hint: {'center_y': 0.5, "right": 0.9}
+		    size_hint: None, None
+		    size: dp(40), dp(40)
+		    selected_color: (app.theme_cls.accent_light if app.theme_cls.theme_style == "Dark" else app.theme_cls.primary_light)
+
+	BoxLayout:
+		orientation: "horizontal"
+
+		MDTextField:
+			hint_text: "Ano"
+			pos_hint: {"center_x": 0.5, "bottom": 1}
+			size_hint: (0.35, None)
+
+		MDLabel:
+			text: "até"
+			pos_hint: {"center_x": 0.5, "bottom": 1}
+			size_hint: (0.3, 1)
+			halign: "center"
+
+		MDTextField:
+			hint_text: "Ano"
+			pos_hint: {"center_x": 0.5, "bottom": 1}
+			size_hint: (0.35, None)
+
+
+<WhichMovieInfoContent>:
+	height: "410dp"
+	orientation: "vertical"
+
+	RightCheck:
+		text: "Básicas"
+		group: "info_type"
+
+	RightCheck:
+		text: "Completas"
+		group: "info_type"
+
+	RightCheck:
+		text: "Todas"
+		group: "info_type"
+
+	MDLabel:
+		text: "Adicionais:"
+
+	RightCheck:
+		text: "fullActor"
+		group: "add1"
+
+	RightCheck:
+		text: "fullCast"
+		group: "add2"
+
+	RightCheck:
+		text: "posters"
+		group: "add3"
+
+	RightCheck:
+		text: "images"
+		group: "add4"
+
+	RightCheck:
+		text: "trailer"
+		group: "add5"
+
+	RightCheck:
+		text: "ratings"
+		group: "add6"
+
+	RightCheck:
+		text: "wikipedia"
+		group: "add7"

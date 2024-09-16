@@ -9,19 +9,44 @@ GITHUB
 
 BUILD 1 feita!!
 
-MEDIO PRAZO  - depois de buildar
-	----- upar no github
+BUILD 2
+
+	MovieResults:
+		mostrar as infos do filme no imdb
+		escolher quais substituir (basic)
 
 	IMDB API
-		usar urlrequest do kivy
-			melhorar a forma como os requests sao feitos
-			melhorar a forma como os erros sao detectados
-			procurar imagem do filme
-		usar a API pra pegar as informações nao completadas dos filmes (meus e da cup)
-		
+		melhorar o backend de como as infos desejadas sao escolhidas
+			talvez passar "info_type()" para dialogs.py 
+
+		talvez implementar as funções de redirect, failure
+		melhorar a função de error 
+			descobrir como refazer a msm request
+			(uma opção: salvar a url e deletar qnd a request retornar sucesso)
+
+		colocar contador de api_calls
+
 	----- upar no github
 
+	limpar codigo desnecessario e/ou confuso
+		Screen, etc
+		
+	DATABASE
+		adicionar colunas para imagem, runtimeStr
+		pedir opiniões se seria interessante adicionar mais algum
+
+		usar a API pra pegar as informações nao completadas dos filmes (meus e da cup)
+
+	----- upar no github
+	----- BUILDAR
+
 	BARRA DE PESQUISA
+		talvez implementar funções nas toolbars (main e MovieResults)
+			trocar textos
+			trocar icones
+
+		guia de pesquisa
+			texto + (titulo, ano, categoria, prioridade, duração, etc)
 
 	ITENS DO NAV DRAWER
 
@@ -30,6 +55,8 @@ MEDIO PRAZO  - depois de buildar
 			adicionar filmes a partir de um arquivo
 			alterar o numero de filmes que aparecem ao abrir o app
 			autoscroll para o filme sorteado ao iniciar o app on/off
+			definir função para o icone de filme:
+				detalhes, editar, imdb, etc
 
 			opções adicionar e editar filme:
 				- procurar automaticamente no IMDB e 
@@ -54,6 +81,8 @@ MEDIO PRAZO  - depois de buildar
 
 	SORTEADOR
 		implementar sorteio com prioridades
+
+	icone e tela de carregamento
 
 
 lONGO PRAZO - depois de acabar as anteriores
@@ -118,6 +147,99 @@ lONGO PRAZO - depois de acabar as anteriores
 			alguma coisa que me der na telha
 				atualizações
 
+	IMDB API
+		advanced_search
+		top_movies
+		most_popular
+		procurar mais coisa pra usar
 
 	MODO ADM (?)
 		postar alguma coisa pra aparecer em tds apps?
+
+	IMPLEMENTAR SERIES (?)
+
+
+
+
+
+
+
+
+
+MOVIE INFO TYPES
+
+	basic movie info:
+	    title, year, id(?), image, genres, runtimeStr
+
+	complete movie info: (1 API call)
+	    title, originalTitle
+	    type
+	    year
+	    image
+	    runtimeStr
+	    plot, plotLocal
+	    directors, directorList
+	    writers, writerList
+	    stars, starList
+	    actorList
+	    genres, genreList
+	    contentRating
+	    imDbRating
+	    imDbRatingVotes
+	    posters
+	    images
+	    trailer
+	    keywords, keywordList
+	    similars
+
+	aditional movie info: (1 API call each)
+	    FullActor,FullCast,Posters,Images,Trailer,Ratings,Wikipedia 
+
+	all possible movie info:
+	    id
+	    title
+	    originalTitle
+	    fullTitle
+	    type
+	    year
+	    image
+	    releaseDate
+	    runtimeMins
+	    runtimeStr
+	    plot
+	    plotLocal
+	    plotLocalIsRtl
+	    awards
+	    directors
+	    directorList
+	    writers
+	    writerList
+	    stars
+	    starList
+	    actorList
+	    fullCast
+	    genres
+	    genreList
+	    companies
+	    companyList
+	    countries
+	    countryList
+	    languages
+	    languageList
+	    contentRating
+	    imDbRating
+	    imDbRatingVotes
+	    metacriticRating
+	    ratings
+	    wikipedia
+	    posters
+	    images
+	    trailer
+	    boxOffice
+	    tagline
+	    keywords
+	    keywordList
+	    similars
+	    tvSeriesInfo
+	    tvEpisodeInfo
+	    errorMessage

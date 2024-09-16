@@ -60,6 +60,10 @@ class MovieDetailContent(BaseContent):
     genres = StringProperty()
     priority = StringProperty()
 
+# resultados ao procurar titulo do filme no imdb
+# class SearchMovieResultsContent(BaseContent):
+#     pass
+
 # ordenar lista
 class ListOrderContent(BaseContent):
     order = ListProperty()
@@ -134,6 +138,25 @@ class CategoriaContent(BaseContent):
 # config lançamento
 class LancamentoContent(BaseContent):
     pass
+
+class WhichMovieInfoContent(BaseContent):
+    def get_info(self, *args):
+        infos_dict = {
+            "Básicas": "Basic",
+            "Completas": "Complete",
+            "Todas": "All"    
+        }
+
+        for child in self.children[8:]:
+            if child.children[0].active:
+                info = infos_dict[child.text]
+
+        aditional = []
+        for child in self.children[:7]:
+            if child.children[0].active:
+                aditional.append(child.text)
+
+        return info, aditional
 
 
 # FUNÇÕES
@@ -237,6 +260,19 @@ def movie_detail_dialog(app, obj):
 
     return dialog
 
+# def movie_search_results_dialog(app):
+#     dialog = BaseDialog(
+#         title = "Resultados da busca:",
+#         type = "custom",
+#         content_cls=SearchMovieResultsContent(),
+#         buttons=[
+#             CancelButton(),
+#             OkayButton(on_release = app.order_list),
+#         ]
+#     )
+
+#     return dialog
+
 # ordenar lista
 def list_order_dialog(app):
     dialog = BaseDialog(
@@ -288,6 +324,20 @@ def lancamento_dialog(app):
         buttons=[
             CancelButton(),
             OkayButton(),
+        ]
+    )
+
+    return dialog
+
+
+def which_movie_info_dialog(app, movie_id):
+    dialog = BaseDialog(
+        title = "Quais Informações?",
+        type = "custom",
+        content_cls=WhichMovieInfoContent(),
+        buttons=[
+            CancelButton(),
+            OkayButton(on_release = lambda x: app.display_movie_info(movie_id)),
         ]
     )
 

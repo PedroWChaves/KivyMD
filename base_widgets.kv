@@ -1,0 +1,160 @@
+#:import d dialogs
+
+<MovieSearchNotFound>:
+	orientation: "vertical"
+	md_bg_color: app.theme_cls.bg_light
+	radius: [10,]
+	padding: "20dp"
+	size_hint: 0.8, 0.5
+	pos_hint: {"center_x": 0.5, "center_y": 0.5}
+
+	MDIcon:
+		icon: "movie-off"
+		font_size: "40dp" # TESTAR NO CELULAR
+		size_hint: None, 1
+		pos_hint: {"center_x": 0.5, "center_y": 0.5}
+
+	MDLabel:
+		text: "Não foi possível encontrar nenhum filme com o título selecionado."
+		halign: "center"
+		pos_hint: {"center_x": 0.5, "center_y": 0.5}
+		size_hint_y: 0.7
+
+<MovieSwiper>:
+	pos_hint: {"center_x": 0.5, "center_y": 0.5}
+	width_mult: 2
+	swipe_on_scroll: False
+
+<MovieSwiperItem>:
+	orientation: "vertical"
+
+	MDCardElev:
+		orientation: "vertical"
+		md_bg_color: app.theme_cls.bg_light
+		radius: [10,]
+		elevation: "10dp"
+		on_release: print("batata")
+
+		AsyncImage:
+			source: root.image
+			size_hint: 1, 1
+
+	    MDCardElev:
+	    	orientation: "vertical"
+	    	md_bg_color: app.theme_cls.primary_color
+	    	radius: [10,]
+	    	size_hint_y: 0.35
+
+	    	ScrollView:
+	    		BoxLayout:
+	    			orientation: "vertical"
+	    			spacing: "10dp"
+	    			padding: "10dp"
+					height: self.minimum_height    			
+	    			size_hint_y: None
+
+					MDLabel:
+						text: root.title
+						size: self.texture_size
+						size_hint_y: None
+
+					MDLabel
+						text: root.description
+						size: self.texture_size
+						size_hint_y: None
+						# size_hint: 1, 1
+
+
+
+<RightCheck>:
+	orientation: "horizontal"
+
+	MDLabel:
+		text: root.text
+		pos_hint: {'center_x': 0.3, 'center_y': 0.5}
+
+	MDCheckbox:
+	    group: root.group
+		pos_hint: {'center_y': 0.5, "right": 0.9}
+	    size_hint: None, None
+	    size: dp(40), dp(40)
+	    selected_color: (app.theme_cls.accent_light if app.theme_cls.theme_style == "Dark" else app.theme_cls.primary_light)
+
+<LeftCheck>:
+	orientation: "horizontal"
+
+	MDLabel:
+		text: root.text
+		pos_hint: {'center_x': 0.7, 'center_y': 0.5}
+
+	MDCheckbox:
+	    group: root.group
+		pos_hint: {'center_y': 0.5, "left": 0.9}
+	    size_hint: None, None
+	    size: dp(40), dp(40)
+	    selected_color: (app.theme_cls.accent_light if app.theme_cls.theme_style == "Dark" else app.theme_cls.primary_light)
+
+
+<OrderItem>:
+	orientation: "horizontal"
+
+	MDIconButton:
+		icon: root.lefticon
+		theme_text_color: "Custom"
+		text_color: app.theme_cls.accent_color
+		on_release: root.update_order()
+
+	MDLabel:
+		text: root.text
+
+	MDIconButton:
+		id: sort
+		icon: root.righticon
+		theme_text_color: "Custom"
+		text_color: app.theme_cls.secondary_text_color
+		on_release: root.update_sort()
+
+
+# ITENS
+# item na lista
+<MovieListItem>:
+	id: list_item
+	bg_color: app.theme_cls.bg_normal
+	font_style: "Body1"
+	theme_text_color: "Custom"
+	text_color: app.theme_cls.text_color
+
+	secondary_font_style: 'Subtitle2'
+	secondary_theme_text_color: "Custom"
+	secondary_text_color: app.theme_cls.secondary_text_color
+
+
+<MovieListItemLeftIcon>:
+	id: movie_icon
+	icon: "movie"
+	theme_text_color: "Custom"
+	text_color: app.theme_cls.opposite_bg_darkest
+	on_release: app.open_dialog(d.movie_detail_dialog, self.parent.parent)
+	# user_font_size: "30dp"
+
+<MovieListItemRightIcon>:
+	id: icon_id
+	theme_text_color: "Custom"
+	text_color: app.theme_cls.opposite_bg_darkest
+	icon: "dots-vertical"
+	on_release: self.right_icon_callback(app)
+
+
+
+
+# Item no menu na lista de filmes
+<MenuItem>:
+	theme_text_color: "Custom"
+	text_color: app.theme_cls.accent_light
+
+	IconLeftWidgetWithoutTouch:
+		icon: root.icon
+		theme_text_color: "Custom"
+		text_color: app.theme_cls.accent_color
+
+
